@@ -36,6 +36,9 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "theme": "./nativewind.config.js"
     }
   }
 }
