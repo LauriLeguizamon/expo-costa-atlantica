@@ -3,10 +3,14 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "expo-router";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import useCustomToast from "./useCustomToast";
+
 const useRequest = (endpoint?: string, method = "GET", body = null) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { errorToast } = useCustomToast();
 
   const router = useRouter();
 
@@ -19,20 +23,20 @@ const useRequest = (endpoint?: string, method = "GET", body = null) => {
   };
 
   const refreshAccessToken = async () => {
-    const baseUrl = process.env.REACT_APP_API_URL;
+    const baseUrl = process.env.EXPO_PUBLIC_API_URL;
     if (!baseUrl) {
-      throw new Error("REACT_APP_BASE_URL is not defined");
+      throw new Error("EXPO_PUBLIC_API_URL is not defined");
     }
 
     try {
       const response = await axios.post(`${baseUrl}users/refresh/`, {
-        refresh: localStorage.getItem("refreshToken"),
+        refresh: await AsyncStorage.getItem("refreshToken"),
       });
-      localStorage.setItem("accessToken", response.data.access);
+      await AsyncStorage.setItem("accessToken", response.data.access);
       return response.data.access;
     } catch (err) {
-      localStorage.clear();
-      router.push("/login");
+      await AsyncStorage.clear();
+      router.replace("/login");
     }
   };
 
@@ -48,19 +52,21 @@ const useRequest = (endpoint?: string, method = "GET", body = null) => {
   ) => {
     try {
       setLoading(true);
-      let headers: Record<string, string> = {
-        "Content-Type": "application/json",
+      let headers: any = {
+        // "Content-Type": "application/json",
+        // Accept: "application/json",
+        // "User-Agent": "MyApp/1.0 (Expo)",
       };
 
       if (
         !noAuthEndpoints.some((noAuth: string) => endpoint.includes(noAuth))
       ) {
-        let accessToken = localStorage.getItem("accessToken");
+        let accessToken = await AsyncStorage.getItem("accessToken");
 
-        if (!localStorage.getItem("refreshToken")) {
-          localStorage.clear();
-          // message.error("Debes volver a iniciar sesión");
-          router.push("/login");
+        if (!(await AsyncStorage.getItem("refreshToken"))) {
+          await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
+          errorToast("Debes volver a iniciar sesión");
+          router.replace("/login");
           return;
         }
 
@@ -72,7 +78,6 @@ const useRequest = (endpoint?: string, method = "GET", body = null) => {
       }
 
       const baseUrl = process.env.EXPO_PUBLIC_API_URL;
-      console.log(baseUrl);
       if (!baseUrl) {
         throw new Error("EXPO_PUBLIC_API_URL is not defined");
       }
@@ -85,10 +90,11 @@ const useRequest = (endpoint?: string, method = "GET", body = null) => {
         params,
       });
 
-      successHandler(response.data);
-      return response.data; // Return the response data
+      successHandler(response?.data);
+      return response?.data;
     } catch (error: any) {
-      errorHandler(error.response);
+      await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
+      errorHandler(error);
     } finally {
       setLoading(false);
     }

@@ -24,10 +24,12 @@ const useGroups = () => {
       "groups/",
       (data: any) => {
         setLoading((prev) => ({ ...prev, post: false }));
+        console.log("data", data);
         setGroups(data.results);
       },
       (error: any) => {
         errorToast("Error obteniendo los grupos, contactase con el soporte");
+        console.log(error);
 
         setLoading((prev) => ({ ...prev, post: false }));
       },

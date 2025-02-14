@@ -80,7 +80,12 @@ function LoginScreen(props: any) {
             </FormControlErrorText>
           </FormControlError>
         </FormControl>
-        <Button className="w-full mt-4" size="sm" onPress={handleSubmit}>
+        <Button
+          className="w-full mt-4"
+          size="sm"
+          onPress={handleSubmit}
+          disabled={loading.post && isInvalid}
+        >
           <ButtonText>Iniciar Sesión</ButtonText>
           {loading.post && <ButtonSpinner></ButtonSpinner>}
         </Button>

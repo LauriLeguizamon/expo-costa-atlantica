@@ -3,6 +3,7 @@ import { useState } from "react";
 import useRequest from "./useRequest";
 import { useRouter } from "expo-router";
 import useCustomToast from "./useCustomToast";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const useAuth = () => {
   const { request } = useRequest(); // Destructure request from useRequest
@@ -23,12 +24,12 @@ const useAuth = () => {
     return await request(
       "post",
       "users/login/",
-      (data: any) => {
+      async (data: any) => {
         const accessToken = data.tokens.access;
         const refreshToken = data.tokens.refresh;
 
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("refreshToken", refreshToken);
+        await AsyncStorage.setItem("accessToken", accessToken);
+        await AsyncStorage.setItem("refreshToken", refreshToken);
 
         router.replace("/");
         setLoading((prev) => ({ ...prev, post: false }));
