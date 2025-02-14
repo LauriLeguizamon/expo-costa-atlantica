@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { VStack } from "@/components/ui/vstack";
-import { Button, ButtonText } from "@/components/ui/button";
+import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
 import {
   FormControl,
   FormControlError,
@@ -15,23 +15,31 @@ import {
 import { Input, InputField } from "@/components/ui/input";
 import { AlertCircleIcon } from "@/components/ui/icon";
 import { Box } from "@/components/ui/box";
+import useAuth from "@/hooks/useAuth";
 
 function LoginScreen(props: any) {
+  const { login, loading } = useAuth();
+
   const [isInvalid, setIsInvalid] = useState(false);
-  const [inputValue, setInputValue] = useState("12345");
+  const [inputValue, setInputValue] = useState("");
   const [email, setEmail] = useState("");
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (inputValue.length < 6) {
       setIsInvalid(true);
     } else {
       setIsInvalid(false);
+
+      login({
+        email,
+        password: inputValue,
+      });
     }
   };
 
   return (
-    <Box className="h-full w-full justify-center items-center">
-      <VStack className="w-full max-w-[300px] rounded-md border border-background-200 p-4">
+    <Box className="h-full w-full items-center mt-[10vh] px-5">
+      <VStack className="w-full md:w-[400px] rounded-md border border-background-200 p-4">
         <FormControl
           isInvalid={isInvalid}
           size="lg"
@@ -40,44 +48,41 @@ function LoginScreen(props: any) {
           isRequired={true}
         >
           <FormControlLabel>
-            <FormControlLabelText>Email</FormControlLabelText>
+            <FormControlLabelText>Correo Electrónico</FormControlLabelText>
           </FormControlLabel>
           <Input className="my-1" size="lg">
             <InputField
-              placeholder="example@gmail.com"
+              placeholder="ejemplo@gmail.com"
               value={email}
               onChangeText={(text) => setEmail(text)}
             />
           </Input>
           <FormControlLabel>
-            <FormControlLabelText>Password</FormControlLabelText>
+            <FormControlLabelText>Contraseña</FormControlLabelText>
           </FormControlLabel>
           <Input className="my-1" size="lg">
             <InputField
               type="password"
-              placeholder="password"
+              placeholder="contraseña"
               value={inputValue}
               onChangeText={(text) => setInputValue(text)}
             />
           </Input>
           <FormControlHelper>
             <FormControlHelperText>
-              Must be at least 6 characters.
+              Debe tener al menos 6 caracteres.
             </FormControlHelperText>
           </FormControlHelper>
           <FormControlError>
             <FormControlErrorIcon as={AlertCircleIcon} />
             <FormControlErrorText>
-              At least 6 characters are required.
+              Se requieren al menos 6 caracteres.
             </FormControlErrorText>
           </FormControlError>
         </FormControl>
-        <Button
-          className="w-fit self-end mt-4"
-          size="sm"
-          onPress={handleSubmit}
-        >
-          <ButtonText>Submit</ButtonText>
+        <Button className="w-full mt-4" size="sm" onPress={handleSubmit}>
+          <ButtonText>Iniciar Sesión</ButtonText>
+          {loading.post && <ButtonSpinner></ButtonSpinner>}
         </Button>
       </VStack>
     </Box>

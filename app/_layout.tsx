@@ -11,7 +11,7 @@ export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/login");
+    // router.replace("/login");
   });
 
   return (
