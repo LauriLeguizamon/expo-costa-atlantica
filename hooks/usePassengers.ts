@@ -3,12 +3,11 @@ import { useState } from "react";
 import useRequest from "./useRequest";
 import { useRouter } from "expo-router";
 import useCustomToast from "./useCustomToast";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const useAuth = () => {
   const { request } = useRequest(); // Destructure request from useRequest
 
-  const { errorToast, warningToast } = useCustomToast();
+  const { errorToast, warningToast, successToast } = useCustomToast();
 
   const router = useRouter();
 
@@ -19,34 +18,27 @@ const useAuth = () => {
     delete: false,
   });
 
-  const login = async (data: any) => {
+  const createPassengers = async (passengers: any) => {
     setLoading((prev) => ({ ...prev, post: true }));
     return await request(
       "post",
-      "users/login/",
+      "passengers",
       async (data: any) => {
-        const accessToken = data.tokens.access;
-        const refreshToken = data.tokens.refresh;
-
-        await AsyncStorage.setItem("accessToken", accessToken);
-        await AsyncStorage.setItem("refreshToken", refreshToken);
-
-        router.replace("/");
         setLoading((prev) => ({ ...prev, post: false }));
+        successToast("Pasajero agregado correctamente");
       },
       (error: any) => {
-        error.status === 400 && error.data?.messageError
-          ? warningToast(error.data?.messageError)
-          : errorToast("Error iniciando sesión, contáctate con el soporte");
-
+        errorToast(error);
         setLoading((prev) => ({ ...prev, post: false }));
       },
-      { ...data, clientType: "APP" }
+      passengers
     );
   };
 
   return {
-    login,
+    // passengers
+    createPassengers,
+
     loading,
     setLoading,
   };

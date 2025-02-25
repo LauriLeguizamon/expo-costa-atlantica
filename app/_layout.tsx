@@ -23,8 +23,12 @@ export default function RootLayout() {
       <PaperProvider>
         <Stack>
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="+not-found" />
+          <Stack.Screen name="login" options={{ title: "Inicio de sesión" }} />
+          <Stack.Screen name="group" options={{ title: "Detalle de grupo" }} />
+          <Stack.Screen
+            name="+not-found"
+            options={{ title: "Página no encontrada" }}
+          />
         </Stack>
         <StatusBar style="auto" />
       </PaperProvider>

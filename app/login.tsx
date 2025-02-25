@@ -17,7 +17,7 @@ import { AlertCircleIcon } from "@/components/ui/icon";
 import { Box } from "@/components/ui/box";
 import useAuth from "@/hooks/useAuth";
 
-function LoginScreen(props: any) {
+function LoginScreen() {
   const { login, loading } = useAuth();
 
   const [isInvalid, setIsInvalid] = useState(false);
@@ -31,7 +31,7 @@ function LoginScreen(props: any) {
       setIsInvalid(false);
 
       login({
-        email,
+        email: email.toLowerCase(),
         password: inputValue,
       });
     }

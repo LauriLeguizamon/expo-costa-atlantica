@@ -8,16 +8,16 @@ import { Button, ButtonText } from "@/components/ui/button";
 import DatePicker from "@/components/DatePicker";
 
 export default function HomeScreen(props: any) {
-  const { getGroupsByDate, groups } = useGroups();
+  const { getGroups, groups } = useGroups();
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
 
   useEffect(() => {
-    getGroupsByDate({ check_in_date: dayjs().format("YYYY-MM-DD") });
+    getGroups({ check_in_date: dayjs().format("YYYY-MM-DD") });
   }, []);
 
   const changeDate = (newDate: string) => {
     setDate(newDate);
-    getGroupsByDate({ check_in_date: newDate });
+    getGroups({ check_in_date: newDate });
   };
 
   return (
@@ -25,7 +25,7 @@ export default function HomeScreen(props: any) {
       <Button
         className="m-2"
         onPress={() =>
-          getGroupsByDate({ check_in_date: dayjs().format("YYYY-MM-DD") })
+          getGroups({ check_in_date: dayjs().format("YYYY-MM-DD") })
         }
       >
         <ButtonText>Recargar</ButtonText>

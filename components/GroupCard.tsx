@@ -4,10 +4,19 @@ import { Text } from "./ui/text";
 
 import WhatsappButton from "./WhatsappButton";
 import { View } from "./ui/view";
+import { Pressable } from "./ui/pressable";
+import { useRouter } from "expo-router";
 
 function GroupCard({ group }: any) {
+  const router = useRouter();
+
   return (
-    <Card className="p-4 rounded-lg mx-2 my-1">
+    <Pressable
+      className="p-4 rounded-lg mx-2 my-1 bg-white shadow-sm"
+      onPress={() => {
+        router.push(`/group/${group.id}`);
+      }}
+    >
       <View className="flex justify-between items-center mb-1 flex-row">
         <Text className="text-lg font-semibold">{group.company.name}</Text>
         <Text className="font-normal text-typography-700">
@@ -42,7 +51,7 @@ function GroupCard({ group }: any) {
       <Text className="mt-1 text-typography-400 text-xs">Observaciones</Text>
       {group.observation && <Text>{group.observation}</Text>}
       {!group.observation && <Text>Sin observaciones</Text>}
-    </Card>
+    </Pressable>
   );
 }
 
