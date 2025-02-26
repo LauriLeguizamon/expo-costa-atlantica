@@ -4,7 +4,7 @@ import useRequest from "./useRequest";
 import { useRouter } from "expo-router";
 import useCustomToast from "./useCustomToast";
 
-const useAuth = () => {
+const usePassengers = () => {
   const { request } = useRequest(); // Destructure request from useRequest
 
   const { errorToast, warningToast, successToast } = useCustomToast();
@@ -35,13 +35,44 @@ const useAuth = () => {
     );
   };
 
+  const groupPassengersByHotelAndExcursion = (data: any) => {
+    const grouped: any = [];
+
+    data.passengers.forEach((passenger: any) => {
+      const hotelName = passenger.hotel.name;
+      const excursionName = passenger.scheduledExcursion.name;
+
+      // Find or create hotel group
+      let hotelGroup = grouped.find((h: any) => h.hotelName === hotelName);
+      if (!hotelGroup) {
+        hotelGroup = { hotelName, excursions: [] };
+        grouped.push(hotelGroup);
+      }
+
+      // Find or create excursion group within the hotel
+      let excursionGroup = hotelGroup.excursions.find(
+        (e: any) => e.excursionName === excursionName
+      );
+      if (!excursionGroup) {
+        excursionGroup = { excursionName, passengers: [] };
+        hotelGroup.excursions.push(excursionGroup);
+      }
+
+      // Add passenger to the excursion group
+      excursionGroup.passengers.push(passenger);
+    });
+
+    return grouped;
+  };
+
   return {
     // passengers
     createPassengers,
+    groupPassengersByHotelAndExcursion,
 
     loading,
     setLoading,
   };
 };
 
-export default useAuth;
+export default usePassengers;

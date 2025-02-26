@@ -2,9 +2,10 @@ import { useState } from "react";
 
 import useRequest from "./useRequest";
 import useCustomToast from "./useCustomToast";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const useGroups = () => {
-  const { request } = useRequest(); // Destructure request from useRequest
+  const { request } = useRequest();
 
   const { errorToast } = useCustomToast();
 
@@ -17,6 +18,7 @@ const useGroups = () => {
 
   const [groups, setGroups] = useState([]);
   const [group, setGroup] = useState([]);
+  const [groupFromDB, setGroupFromDB]: any = useState(undefined);
 
   const getGroups = async (params: object) => {
     setLoading((prev) => ({ ...prev, get: true }));
@@ -55,12 +57,23 @@ const useGroups = () => {
       {}
     );
   };
+
+  const getGroupFromDB = async (id: string) => {
+    const groupFromDB = await AsyncStorage.getItem(`group_${id}`);
+
+    if (groupFromDB) {
+      setGroupFromDB(JSON.parse(groupFromDB));
+    }
+  };
+
   return {
     // groups
     getGroups,
+    getGroupFromDB,
     getGroupDetail,
     groups,
     group,
+    groupFromDB,
 
     loading,
     setLoading,

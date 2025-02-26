@@ -24,9 +24,22 @@ import { Textarea, TextareaInput } from "./ui/textarea";
 import { Spinner } from "./ui/spinner";
 import { Button, ButtonText } from "./ui/button";
 
-const PassengerForm = ({ visible, onClose, group }: any) => {
+const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
   const hotelHook = useHotels();
   const [excursions, setExcursions] = useState([]);
+  const [initialValues, setInitialValues] = useState({
+    hotel: "",
+    name: "",
+    scheduledExcursion: "",
+    adultsCount: undefined,
+    minorsCount: undefined,
+    babyCount: undefined,
+    freeCount: undefined,
+    halfPriceAdultsCount: undefined,
+    observation: "",
+    guideObservation: "",
+    paymentAmount: undefined,
+  });
 
   useEffect(() => {
     hotelHook.getHotels();
@@ -43,6 +56,38 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
 
     setExcursions(group.scheduledExcursions);
   }, [group]);
+
+  useEffect(() => {
+    if (visible && passengerToEdit) {
+      setInitialValues({
+        hotel: passengerToEdit.hotel,
+        name: passengerToEdit.name,
+        scheduledExcursion: passengerToEdit.scheduledExcursion,
+        adultsCount: passengerToEdit.adultsCount,
+        minorsCount: passengerToEdit.minorsCount,
+        babyCount: passengerToEdit.babyCount,
+        freeCount: passengerToEdit.freeCount,
+        halfPriceAdultsCount: passengerToEdit.halfPriceAdultsCount,
+        observation: passengerToEdit.observation,
+        guideObservation: passengerToEdit.guideObservation,
+        paymentAmount: passengerToEdit.paymentAmount,
+      });
+    } else {
+      setInitialValues({
+        hotel: "",
+        name: "",
+        scheduledExcursion: "",
+        adultsCount: undefined,
+        minorsCount: undefined,
+        babyCount: undefined,
+        freeCount: undefined,
+        halfPriceAdultsCount: undefined,
+        observation: "",
+        guideObservation: "",
+        paymentAmount: undefined,
+      });
+    }
+  }, [visible, passengerToEdit]);
 
   const validationSchema = Yup.object({
     name: Yup.string().required("El nombre es obligatorio"),
@@ -68,13 +113,17 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
     );
   };
 
+  const handleNumericInput = (text: string) => {
+    return text.replace(/[^0-9]/g, "");
+  };
+
   const onSubmit = async (values: any) => {
     const user = JSON.parse((await AsyncStorage.getItem("user")) || "");
 
     if (!user) return;
 
     const passengerData = {
-      id: uuid(),
+      id: passengerToEdit ? passengerToEdit.id : uuid(),
       group: group.id,
       seller: user.id,
       payments: [
@@ -91,6 +140,14 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
       halfPriceAdultsCount: parseInt(values.halfPriceAdultsCount || 0),
     };
 
+    passengerToEdit
+      ? await updatePassenger(passengerData)
+      : await createPassenger(passengerData);
+
+    onClose();
+  };
+
+  const createPassenger = async (passengerData: any) => {
     let savedGroupString: any = await AsyncStorage.getItem(`group_${group.id}`);
 
     let savedGroup: any = savedGroupString
@@ -107,8 +164,22 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
     }
 
     await AsyncStorage.setItem(`group_${group.id}`, JSON.stringify(savedGroup));
+  };
 
-    onClose();
+  const updatePassenger = async (passengerData: any) => {
+    let savedGroup: any = JSON.parse(
+      (await AsyncStorage.getItem(`group_${group.id}`)) as string
+    );
+
+    savedGroup.passengers.forEach((passenger: any) => {
+      if (passenger.id === passengerData.id) {
+        Object.keys(passengerData).forEach((key) => {
+          passenger[key] = passengerData[key];
+        });
+      }
+    });
+
+    await AsyncStorage.setItem(`group_${group.id}`, JSON.stringify(savedGroup));
   };
 
   return (
@@ -143,21 +214,10 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
               </Pressable>
             </HStack>
             <Formik
-              initialValues={{
-                hotel: "",
-                name: "",
-                scheduledExcursion: "",
-                adultsCount: undefined,
-                minorsCount: undefined,
-                babyCount: undefined,
-                freeCount: undefined,
-                halfPriceAdultsCount: undefined,
-                observation: "",
-                guideObservation: "",
-                paymentAmount: undefined,
-              }}
+              initialValues={initialValues}
               validationSchema={validationSchema}
               onSubmit={(values) => onSubmit(values)}
+              enableReinitialize
             >
               {({
                 handleChange,
@@ -185,7 +245,9 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
                     renderItem={renderHotel}
                   />
                   {touched.hotel && errors.hotel && (
-                    <Text className="text-red-500">{errors.hotel}</Text>
+                    <Text className="text-red-500">
+                      {typeof errors.hotel === "string" && errors.hotel}
+                    </Text>
                   )}
 
                   <Text>Excursión</Text>
@@ -206,7 +268,8 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
                   />
                   {touched.scheduledExcursion && errors.scheduledExcursion && (
                     <Text className="text-red-500">
-                      {errors.scheduledExcursion}
+                      {typeof errors.scheduledExcursion === "string" &&
+                        errors.scheduledExcursion}
                     </Text>
                   )}
 
@@ -220,21 +283,9 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
                     />
                   </Input>
                   {touched.name && errors.name && (
-                    <Text className="text-red-500">{errors.name}</Text>
-                  )}
-
-                  <Text>Seña</Text>
-                  <Input>
-                    <InputField
-                      keyboardType="numeric"
-                      placeholder="$0"
-                      value={values.paymentAmount}
-                      onChangeText={handleChange("paymentAmount")}
-                      className="h-12" // Added height class
-                    />
-                  </Input>
-                  {touched.paymentAmount && errors.paymentAmount && (
-                    <Text className="text-red-500">{errors.paymentAmount}</Text>
+                    <Text className="text-red-500">
+                      {typeof errors.name === "string" && errors.name}
+                    </Text>
                   )}
 
                   <HStack className="space-x-4 gap-3">
@@ -246,7 +297,10 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
                           placeholder="0"
                           value={values.adultsCount}
                           onChangeText={(text) =>
-                            setFieldValue("adultsCount", parseInt(text))
+                            setFieldValue(
+                              "adultsCount",
+                              handleNumericInput(text)
+                            )
                           }
                           className="h-12" // Added height class
                         />
@@ -259,7 +313,10 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
                           placeholder="0"
                           value={values.minorsCount}
                           onChangeText={(text) =>
-                            setFieldValue("minorsCount", parseInt(text))
+                            setFieldValue(
+                              "minorsCount",
+                              handleNumericInput(text)
+                            )
                           }
                           className="h-12" // Added height class
                         />
@@ -272,7 +329,7 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
                           placeholder="0"
                           value={values.babyCount}
                           onChangeText={(text) =>
-                            setFieldValue("babyCount", parseInt(text))
+                            setFieldValue("babyCount", handleNumericInput(text))
                           }
                           className="h-12" // Added height class
                         />
@@ -287,7 +344,7 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
                           placeholder="0"
                           value={values.freeCount}
                           onChangeText={(text) =>
-                            setFieldValue("freeCount", parseInt(text))
+                            setFieldValue("freeCount", handleNumericInput(text))
                           }
                           className="h-12" // Added height class
                         />
@@ -296,12 +353,13 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
                       <Text>Medio Gratis</Text>
                       <Input>
                         <InputField
+                          keyboardType="numeric"
                           placeholder="0"
                           value={values.halfPriceAdultsCount}
                           onChangeText={(text) =>
                             setFieldValue(
                               "halfPriceAdultsCount",
-                              parseInt(text)
+                              handleNumericInput(text)
                             )
                           }
                           className="h-12" // Added height class
@@ -309,6 +367,25 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
                       </Input>
                     </VStack>
                   </HStack>
+
+                  <Text>Seña</Text>
+                  <Input>
+                    <InputField
+                      keyboardType="numeric"
+                      placeholder="$0"
+                      value={values.paymentAmount}
+                      onChangeText={(text) =>
+                        setFieldValue("paymentAmount", handleNumericInput(text))
+                      }
+                      className="h-12" // Added height class
+                    />
+                  </Input>
+                  {touched.paymentAmount && errors.paymentAmount && (
+                    <Text className="text-red-500">
+                      {typeof errors.paymentAmount === "string" &&
+                        errors.paymentAmount}
+                    </Text>
+                  )}
 
                   <Text>Observación Oficina</Text>
                   <Textarea className="h-20">
@@ -334,7 +411,11 @@ const PassengerForm = ({ visible, onClose, group }: any) => {
                     }}
                     className="mt-2"
                   >
-                    <ButtonText>Enviar</ButtonText>
+                    {passengerToEdit ? (
+                      <ButtonText>Crear Pasajero</ButtonText>
+                    ) : (
+                      <ButtonText>Actualizar Pasajero</ButtonText>
+                    )}
                   </Button>
                 </VStack>
               )}
