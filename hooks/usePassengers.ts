@@ -3,6 +3,7 @@ import { useState } from "react";
 import useRequest from "./useRequest";
 import { useRouter } from "expo-router";
 import useCustomToast from "./useCustomToast";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const usePassengers = () => {
   const { request } = useRequest(); // Destructure request from useRequest
@@ -18,11 +19,24 @@ const usePassengers = () => {
     delete: false,
   });
 
-  const createPassengers = async (passengers: any) => {
+  const createPassengers = async (groupId: string) => {
+    const groupString: any = await AsyncStorage.getItem(`group_${groupId}`);
+
+    if (!groupString) return;
+
+    const group = JSON.parse(groupString);
+
+    group.passengers.forEach((passenger: any) => {
+      passenger.hotel = passenger.hotel.id;
+      passenger.scheduledExcursion = passenger.scheduledExcursion.id;
+      delete passenger["id"];
+      delete passenger["paymentAmount"];
+    });
+
     setLoading((prev) => ({ ...prev, post: true }));
     return await request(
       "post",
-      "passengers",
+      "passengers/",
       async (data: any) => {
         setLoading((prev) => ({ ...prev, post: false }));
         successToast("Pasajero agregado correctamente");
@@ -31,7 +45,7 @@ const usePassengers = () => {
         errorToast(error);
         setLoading((prev) => ({ ...prev, post: false }));
       },
-      passengers
+      group.passengers
     );
   };
 
