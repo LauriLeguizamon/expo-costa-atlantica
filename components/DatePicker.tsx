@@ -22,10 +22,6 @@ function DatePicker({ onConfirm, initialDate }: any) {
   );
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    console.log(date);
-  }, [date]);
-
   const onDismissSingle = useCallback(() => {
     setOpen(false);
   }, [setOpen]);
@@ -35,7 +31,6 @@ function DatePicker({ onConfirm, initialDate }: any) {
       setOpen(false);
 
       setDate(params.date);
-      console.log(onConfirm);
       if (onConfirm) {
         onConfirm(
           dayjs(params.date)

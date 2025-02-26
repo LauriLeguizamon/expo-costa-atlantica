@@ -30,6 +30,7 @@ const useAuth = () => {
 
         await AsyncStorage.setItem("accessToken", accessToken);
         await AsyncStorage.setItem("refreshToken", refreshToken);
+        await AsyncStorage.setItem("user", JSON.stringify(data.user));
 
         router.replace("/");
         setLoading((prev) => ({ ...prev, post: false }));

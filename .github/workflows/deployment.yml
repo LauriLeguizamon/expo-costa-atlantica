@@ -36,8 +36,13 @@ jobs:
           source: "dist/*"
           target: "/var/www/costa-atlantica"
 
-      - name: Set Permissions
-        run: ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "sudo chown -R www-data:www-data /var/www/expo-web && sudo chmod -R 755 /var/www/costa-atlantica"
-
-      - name: Restart NGINX
-        run: ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "sudo systemctl restart nginx"
+      - name: Set Permissions and Restart NGINX
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            sudo chown -R www-data:www-data /var/www/expo-web
+            sudo chmod -R 755 /var/www/expo-web
+            sudo systemctl restart nginx

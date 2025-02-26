@@ -29,8 +29,6 @@ const useRequest = (endpoint?: string, method = "GET", body = null) => {
     }
 
     try {
-      console.log(await AsyncStorage.getItem("refreshToken"), "refreshToken");
-      console.log(await AsyncStorage.getItem("accessToken"), "accessToken");
       const response = await axios.post(`${baseUrl}users/refresh/`, {
         refresh: await AsyncStorage.getItem("refreshToken"),
       });
@@ -57,7 +55,7 @@ const useRequest = (endpoint?: string, method = "GET", body = null) => {
       let headers: any = {
         // "Content-Type": "application/json",
         // Accept: "application/json",
-        "User-Agent": "MyApp/1.0 (Expo)",
+        // "User-Agent": "MyApp/1.0 (Expo)",
       };
 
       if (
@@ -65,9 +63,6 @@ const useRequest = (endpoint?: string, method = "GET", body = null) => {
       ) {
         let accessToken = await AsyncStorage.getItem("accessToken");
         let refreshToken = await AsyncStorage.getItem("refreshToken");
-
-        console.log(accessToken, "accessToken");
-        console.log(refreshToken, "refreshToken");
 
         if (!(await AsyncStorage.getItem("refreshToken"))) {
           await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);

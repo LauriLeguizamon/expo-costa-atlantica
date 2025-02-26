@@ -29,7 +29,6 @@ const useGroups = () => {
       },
       (error: any) => {
         errorToast("Error obteniendo los grupos, contactase con el soporte");
-        console.log(error);
 
         setLoading((prev) => ({ ...prev, get: false }));
       },
@@ -42,13 +41,12 @@ const useGroups = () => {
     setLoading((prev) => ({ ...prev, get: true }));
     return await request(
       "get",
-      `groups/${id}`,
+      `groups/${id}/`,
       (data: any) => {
         setLoading((prev) => ({ ...prev, get: false }));
         setGroup(data);
       },
       (error: any) => {
-        console.log(error);
         errorToast("Error obteniendo los grupos, contactase con el soporte");
 
         setLoading((prev) => ({ ...prev, get: false }));
