@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
-
+import React, { useEffect, useState, useRef } from "react";
 import { Modal, View, StyleSheet, ScrollView } from "react-native";
+import "react-native-get-random-values";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Dropdown } from "react-native-element-dropdown";
+import { FormikProps } from "formik";
 
 import dayjs from "dayjs";
 import { v4 as uuid } from "uuid";
@@ -25,7 +26,10 @@ import { Spinner } from "./ui/spinner";
 import { Button, ButtonText } from "./ui/button";
 
 const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
+  const formikRef = useRef<FormikProps<any>>(null);
   const hotelHook = useHotels();
+  const [totalAmount, setTotalAmount] = useState(0);
+
   const [excursions, setExcursions] = useState([]);
   const [initialValues, setInitialValues] = useState({
     hotel: "",
@@ -89,6 +93,55 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
     }
   }, [visible, passengerToEdit]);
 
+  // Function to update the total amount based on current formik values
+  const updateTotalAmount = () => {
+    if (!formikRef.current || !formikRef.current.values.scheduledExcursion)
+      return 0;
+
+    const values = formikRef.current.values;
+
+    const adultsValue = parseInt(values.adultsCount) || 0;
+    const minorsValue = parseInt(values.minorsCount) || 0;
+    const halfPriceValue = parseInt(values.halfPriceAdultsCount) || 0;
+
+    console.log(values.scheduledExcursion);
+    const adultsPrice = values.scheduledExcursion.excursionType.priceAdult;
+    const minorsPrice = values.scheduledExcursion.excursionType.priceMinor;
+
+    setTotalAmount(
+      adultsValue * adultsPrice +
+        minorsValue * minorsPrice +
+        halfPriceValue * adultsPrice * 0.5
+    );
+  };
+
+  // Function to validate numeric input
+  const validateNumericInput = (text: string) => {
+    // Only allow digits
+    return text.replace(/[^0-9]/g, "");
+  };
+
+  // Function to handle numeric input
+  const handleNumericInput = async (
+    text: string,
+    fieldName: string,
+    setFieldValue: any,
+    updateTotal: boolean = false
+  ) => {
+    const validatedText = validateNumericInput(text);
+    let value = undefined;
+
+    if (validatedText.length > 0) {
+      value = parseInt(validatedText);
+    }
+
+    await setFieldValue(fieldName, value);
+
+    if (updateTotal) {
+      updateTotalAmount();
+    }
+  };
+
   const validationSchema = Yup.object({
     name: Yup.string().required("El nombre es obligatorio"),
     paymentAmount: Yup.string().required("La seña es obligatoria"),
@@ -113,10 +166,6 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
     );
   };
 
-  const handleNumericInput = (text: string) => {
-    return text.replace(/[^0-9]/g, "");
-  };
-
   const onSubmit = async (values: any) => {
     const user = JSON.parse((await AsyncStorage.getItem("user")) || "");
 
@@ -138,6 +187,7 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
       babyCount: parseInt(values.babyCount || 0),
       freeCount: parseInt(values.freeCount || 0),
       halfPriceAdultsCount: parseInt(values.halfPriceAdultsCount || 0),
+      totalAmount: totalAmount,
     };
 
     passengerToEdit
@@ -214,6 +264,7 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
               </Pressable>
             </HStack>
             <Formik
+              innerRef={formikRef}
               initialValues={initialValues}
               validationSchema={validationSchema}
               onSubmit={(values) => onSubmit(values)}
@@ -295,11 +346,13 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
                         <InputField
                           keyboardType="numeric"
                           placeholder="0"
-                          value={values.adultsCount}
+                          value={values.adultsCount?.toString()}
                           onChangeText={(text) =>
-                            setFieldValue(
+                            handleNumericInput(
+                              text,
                               "adultsCount",
-                              handleNumericInput(text)
+                              setFieldValue,
+                              true
                             )
                           }
                           className="h-12" // Added height class
@@ -311,11 +364,13 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
                         <InputField
                           keyboardType="numeric"
                           placeholder="0"
-                          value={values.minorsCount}
+                          value={values.minorsCount?.toString()}
                           onChangeText={(text) =>
-                            setFieldValue(
+                            handleNumericInput(
+                              text,
                               "minorsCount",
-                              handleNumericInput(text)
+                              setFieldValue,
+                              true
                             )
                           }
                           className="h-12" // Added height class
@@ -327,9 +382,14 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
                         <InputField
                           keyboardType="numeric"
                           placeholder="0"
-                          value={values.babyCount}
+                          value={values.babyCount?.toString()}
                           onChangeText={(text) =>
-                            setFieldValue("babyCount", handleNumericInput(text))
+                            handleNumericInput(
+                              text,
+                              "babyCount",
+                              setFieldValue,
+                              true
+                            )
                           }
                           className="h-12" // Added height class
                         />
@@ -337,29 +397,31 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
                     </VStack>
 
                     <VStack className="flex-1">
-                      <Text>Gratis</Text>
+                      <Text>Liberado</Text>
                       <Input>
                         <InputField
                           keyboardType="numeric"
                           placeholder="0"
-                          value={values.freeCount}
+                          value={values.freeCount?.toString()}
                           onChangeText={(text) =>
-                            setFieldValue("freeCount", handleNumericInput(text))
+                            handleNumericInput(text, "freeCount", setFieldValue)
                           }
                           className="h-12" // Added height class
                         />
                       </Input>
 
-                      <Text>Medio Gratis</Text>
+                      <Text>Medio Liberado</Text>
                       <Input>
                         <InputField
                           keyboardType="numeric"
                           placeholder="0"
-                          value={values.halfPriceAdultsCount}
+                          value={values.halfPriceAdultsCount?.toString()}
                           onChangeText={(text) =>
-                            setFieldValue(
+                            handleNumericInput(
+                              text,
                               "halfPriceAdultsCount",
-                              handleNumericInput(text)
+                              setFieldValue,
+                              true
                             )
                           }
                           className="h-12" // Added height class
@@ -368,14 +430,24 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
                     </VStack>
                   </HStack>
 
+                  <Text>Importe Total</Text>
+                  <Input>
+                    <InputField
+                      editable={false}
+                      placeholder="$0"
+                      value={`$${totalAmount}`}
+                      className="h-12 bg-gray-100" // Added height class and background
+                    />
+                  </Input>
+
                   <Text>Seña</Text>
                   <Input>
                     <InputField
                       keyboardType="numeric"
                       placeholder="$0"
-                      value={values.paymentAmount}
+                      value={`$${values.paymentAmount?.toString() || 0}`}
                       onChangeText={(text) =>
-                        setFieldValue("paymentAmount", handleNumericInput(text))
+                        handleNumericInput(text, "paymentAmount", setFieldValue)
                       }
                       className="h-12" // Added height class
                     />
@@ -412,9 +484,9 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
                     className="mt-2"
                   >
                     {passengerToEdit ? (
-                      <ButtonText>Crear Pasajero</ButtonText>
-                    ) : (
                       <ButtonText>Actualizar Pasajero</ButtonText>
+                    ) : (
+                      <ButtonText>Crear Pasajero</ButtonText>
                     )}
                   </Button>
                 </VStack>

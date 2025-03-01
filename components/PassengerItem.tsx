@@ -37,12 +37,12 @@ function PassengerItem({ passenger, updateList, updatePassenger }: any) {
         </Text>
       </View>
 
-      <View className="flex flex-row space-x-2 items-center">
+      <View className="flex flex-row space-x-3 items-center me-4">
         <FontAwesome
           name="edit"
           size={22}
           color="blue"
-          className="me-3"
+          className="web:me-2 me-5 mt-[1px]"
           onPress={() => {
             updatePassenger(passenger);
           }}
@@ -50,6 +50,7 @@ function PassengerItem({ passenger, updateList, updatePassenger }: any) {
         <FontAwesome
           name="trash"
           size={22}
+          className="h-[22px]"
           color="red"
           onPress={() => deletePassenger()}
         />

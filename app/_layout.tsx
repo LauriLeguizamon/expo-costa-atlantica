@@ -22,9 +22,12 @@ export default function RootLayout() {
     <GluestackUIProvider>
       <PaperProvider>
         <Stack>
-          <Stack.Screen name="(tabs)" />
+          <Stack.Screen
+            name="(tabs)"
+            options={{ title: "Costa Atlantica APP" }}
+          />
           <Stack.Screen name="login" options={{ title: "Inicio de sesión" }} />
-          <Stack.Screen name="group" options={{ title: "Detalle de grupo" }} />
+          <Stack.Screen name="group" options={{ headerShown: false }} />
           <Stack.Screen
             name="+not-found"
             options={{ title: "Página no encontrada" }}

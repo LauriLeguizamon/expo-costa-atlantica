@@ -1,18 +1,18 @@
-import React from 'react';
-import { boxStyle } from './styles';
+import React from "react";
+import { boxStyle } from "./styles";
 
-import type { VariantProps } from '@gluestack-ui/nativewind-utils';
+import type { VariantProps } from "@gluestack-ui/nativewind-utils";
 
-type IBoxProps = React.ComponentPropsWithoutRef<'div'> &
+type IBoxProps = React.ComponentPropsWithoutRef<"View"> &
   VariantProps<typeof boxStyle> & { className?: string };
 
 const Box = React.forwardRef<HTMLDivElement, IBoxProps>(
   ({ className, ...props }, ref) => {
     return (
-      <div ref={ref} className={boxStyle({ class: className })} {...props} />
+      <View ref={ref} className={boxStyle({ class: className })} {...props} />
     );
   }
 );
 
-Box.displayName = 'Box';
+Box.displayName = "Box";
 export { Box };

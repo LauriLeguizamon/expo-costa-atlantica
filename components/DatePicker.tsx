@@ -22,6 +22,10 @@ function DatePicker({ onConfirm, initialDate }: any) {
   );
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    console.log("initialDate", dayjs(initialDate), dayjs());
+  }, [initialDate]);
+
   const onDismissSingle = useCallback(() => {
     setOpen(false);
   }, [setOpen]);
@@ -44,7 +48,16 @@ function DatePicker({ onConfirm, initialDate }: any) {
 
   return (
     <View className="m-2 px-4 py-1 bg-white rounded-lg">
-      <Text className="pt-2 font-semibold">Selector de fecha</Text>
+      <View className="flex-row pt-2 justify-between w-full flex">
+        <Text className="pt-2 font-semibold">Selector de fecha</Text>
+
+        {dayjs(initialDate).format("YYYY-MM-DD") !==
+          dayjs().format("YYYY-MM-DD") && (
+          <Text className="px-4 py-1 rounded-lg text-red-500 font-bold">
+            Fuera de fecha
+          </Text>
+        )}
+      </View>
       <View className="flex flex-row justify-between items-center">
         <Text>
           {dayjs(date).tz("America/Argentina/Buenos_Aires").format("ddd DD/MM")}
@@ -54,17 +67,32 @@ function DatePicker({ onConfirm, initialDate }: any) {
           <ButtonText>Cambiar</ButtonText>
           <ButtonIcon as={ChevronDownIcon} />
         </Button>
-
-        <DatePickerModal
-          locale="es"
-          mode="single"
-          presentationStyle="pageSheet"
-          visible={open}
-          onDismiss={onDismissSingle}
-          date={date}
-          onConfirm={onConfirmSingle}
-        />
       </View>
+
+      {dayjs(initialDate).format("YYYY-MM-DD") !==
+        dayjs().format("YYYY-MM-DD") && (
+        <Button
+          onPress={() => {
+            setOpen(false);
+            onConfirmSingle({ date: dayjs().toDate() });
+          }}
+          className="bg-red-200 px-2 my-2 "
+        >
+          <ButtonText className="text-red-500 font-bold">
+            Volver a hoy
+          </ButtonText>
+        </Button>
+      )}
+
+      <DatePickerModal
+        locale="es"
+        mode="single"
+        presentationStyle="pageSheet"
+        visible={open}
+        onDismiss={onDismissSingle}
+        date={date}
+        onConfirm={onConfirmSingle}
+      />
     </View>
   );
 }

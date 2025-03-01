@@ -39,6 +39,24 @@ const useGroups = () => {
     );
   };
 
+  const getGroupHistoryPerDay = async (date: string, userId: number) => {
+    setLoading((prev) => ({ ...prev, get: true }));
+    return await request(
+      "get",
+      `passengers/seller-commission-pdf/${userId}/${date}/`,
+      (data: any) => {
+        console.log(data);
+      },
+      (error: any) => {
+        errorToast("Error obteniendo los grupos, contactase con el soporte");
+
+        setLoading((prev) => ({ ...prev, get: false }));
+      },
+      null,
+      {}
+    );
+  };
+
   const getGroupDetail = async (id: number) => {
     setLoading((prev) => ({ ...prev, get: true }));
     return await request(

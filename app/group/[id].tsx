@@ -15,12 +15,15 @@ import {
 import { Text } from "@/components/ui/text";
 import useGroups from "@/hooks/useGroups";
 import usePassengers from "@/hooks/usePassengers";
-import { useLocalSearchParams } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { View, ScrollView } from "react-native";
+import EmptyStateCard from "@/components/EmptyStateCard";
 
 function GroupDetail() {
   const { id } = useLocalSearchParams();
+  const router = useRouter();
 
   const { group, getGroupDetail, getGroupFromDB, groupFromDB } = useGroups();
   const { groupPassengersByHotelAndExcursion, createPassengers } =
@@ -66,16 +69,25 @@ function GroupDetail() {
           Listado de pasajeros
         </Text>
 
-        {passengers.map((hotel: any) => (
-          <HotelCard
-            hotel={hotel}
-            key={hotel.hotelName}
-            updateList={updateList}
-            updatePassenger={(passenger: any) => {
-              setPassengerToEdit(passenger);
-            }}
+        {passengers.length > 0 ? (
+          passengers.map((hotel: any) => (
+            <HotelCard
+              hotel={hotel}
+              key={hotel.hotelName}
+              updateList={updateList}
+              updatePassenger={(passenger: any) => {
+                setPassengerToEdit(passenger);
+              }}
+            />
+          ))
+        ) : (
+          <EmptyStateCard
+            title="No hay pasajeros registrados"
+            message="Añade pasajeros a este grupo para comenzar la gestión."
+            actionLabel="Crear pasajero"
+            onAction={() => setModalVisible(true)}
           />
-        ))}
+        )}
 
         <PassengerForm
           visible={modalVisible}
@@ -127,8 +139,11 @@ function GroupDetail() {
               <ButtonText>Cancel</ButtonText>
             </Button>
             <Button
-              onPress={() => {
+              onPress={async () => {
                 createPassengers(id as string);
+                await AsyncStorage.removeItem(`group_${id}`);
+                router.push("/");
+
                 setShowModal(false);
               }}
             >
@@ -139,7 +154,11 @@ function GroupDetail() {
       </Modal>
 
       <View className="absolute bottom-0 w-full p-4 bg-white border-t border-gray-300">
-        <Button className="w-full" onPress={() => setShowModal(true)}>
+        <Button
+          className="w-full"
+          onPress={() => setShowModal(true)}
+          isDisabled={passengers.length === 0}
+        >
           <ButtonText>Confirmar carga de pasajeros</ButtonText>
         </Button>
       </View>

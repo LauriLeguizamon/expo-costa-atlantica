@@ -36,7 +36,7 @@ const usePassengers = () => {
     setLoading((prev) => ({ ...prev, post: true }));
     return await request(
       "post",
-      "passengers/",
+      "passengers/list/",
       async (data: any) => {
         setLoading((prev) => ({ ...prev, post: false }));
         successToast("Pasajero agregado correctamente");

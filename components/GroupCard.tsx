@@ -20,7 +20,7 @@ function GroupCard({ group }: any) {
       <View className="flex justify-between items-center mb-1 flex-row">
         <Text className="text-lg font-semibold">{group.company.name}</Text>
         <Text className="font-normal text-typography-700">
-          {`${dayjs(group.checkOutDate).format("DD/MM")} - ${dayjs(
+          {`Salida: ${dayjs(group.checkOutDate).format("DD/MM")} - ${dayjs(
             group.checkOutDate
           ).diff(dayjs(group.checkInDate), "day")} noches`}
         </Text>

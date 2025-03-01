@@ -1,21 +1,25 @@
 import useGroups from "@/hooks/useGroups";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Text, View } from "react-native";
 
 import dayjs from "dayjs";
 import GroupCard from "@/components/GroupCard";
 import { Button, ButtonText } from "@/components/ui/button";
 import DatePicker from "@/components/DatePicker";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function HomeScreen(props: any) {
   const { getGroups, groups } = useGroups();
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
 
-  useEffect(() => {
-    getGroups({ check_in_date: dayjs().format("YYYY-MM-DD") });
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      getGroups({ check_in_date: dayjs(date).format("YYYY-MM-DD") });
+    }, [])
+  );
 
   const changeDate = (newDate: string) => {
+    console.log(newDate);
     setDate(newDate);
     getGroups({ check_in_date: newDate });
   };
