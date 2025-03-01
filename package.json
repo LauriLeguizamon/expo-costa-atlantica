@@ -1,6 +1,7 @@
 {
   "name": "app-costa-atlantica",
   "main": "expo-router/entry",
+  "homepage": "/app/",
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
