@@ -35,4 +35,4 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: 22
           source: "dist/*"
-          target: "/var/www/costa-atlantica/dist"
+          target: "/var/www/costa-atlantica"
