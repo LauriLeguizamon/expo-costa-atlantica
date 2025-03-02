@@ -9,10 +9,11 @@
     "android": "DARK_MODE=media expo start --android",
     "ios": "DARK_MODE=media expo start --ios",
     "web": "DARK_MODE=media expo start --web",
-    "build": "npx expo export --platform web --output-dir dist --clear",
+    "build": "EXPO_PUBLIC_PATH=/app npx expo export --platform web --output-dir dist --clear",
     "fix-paths": "node ./scripts/fix-html-paths.js",
+    "create-web-config": "node ./scripts/create-web-config.js",
     "verify-paths": "node ./scripts/verify-paths.js",
-    "build:production": "npm run build && npm run fix-paths && npm run verify-paths",
+    "build:production": "npm run build && npm run fix-paths && npm run create-web-config && npm run verify-paths",
     "test": "jest --watchAll",
     "lint": "expo lint"
   },
