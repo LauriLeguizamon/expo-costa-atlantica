@@ -21,7 +21,10 @@
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "publicPath": "/app/"
+      "publicPath": "/app/",
+      "build": {
+        "publicPath": "/app/"
+      }
     },
     "plugins": [
       "expo-router",
