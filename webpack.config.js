@@ -1,8 +1,18 @@
-import createExpoWebpackConfigAsync from "@expo/webpack-config";
+const { createExpoWebpackConfigAsync } = require("@expo/webpack-config");
 
-export default async function (env, argv) {
-  const config = await createExpoWebpackConfigAsync(env, argv);
-  // Adjust publicPath so assets are loaded from /app/
+module.exports = async function (env, argv) {
+  const config = await createExpoWebpackConfigAsync(
+    {
+      ...env,
+      babel: {
+        dangerouslyAddModulePathsToTranspile: ["your-module-name"],
+      },
+    },
+    argv
+  );
+
+  // Set the public path correctly
   config.output.publicPath = "/app/";
+
   return config;
-}
+};
