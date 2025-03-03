@@ -16,8 +16,8 @@ export default function RootLayout() {
   const pathname = usePathname();
 
   // useEffect(() => {
-  //   if (pathname.startsWith("/app")) {
-  //     router.replace(pathname.replace("/app", "") as any);
+  //   if (pathname === "/") {
+  //     router.replace("/app/(tabs)/");
   //   }
   // }, [pathname]);
 
