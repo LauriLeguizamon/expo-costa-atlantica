@@ -1,68 +1,53 @@
+#!/usr/bin/env node
+
+/**
+ * fixPaths.js
+ * A Node.js script to rewrite absolute paths in HTML files
+ * so that they point to /app/ instead of /.
+ */
+
 const fs = require("fs");
 const path = require("path");
 
-function fixHtmlPaths() {
-  const buildDir = path.join(__dirname, "../dist");
-  const indexPath = path.join(buildDir, "index.html");
+// Adjust this if your build folder is named differently
+const DIST_DIR = path.join(__dirname, "./../dist");
 
-  if (!fs.existsSync(indexPath)) {
-    console.error("index.html not found. Run build first.");
-    process.exit(1);
+// The search/replace pairs. You can add more if needed.
+const REPLACEMENTS = [
+  { from: /"\/_expo\//g, to: '"/app/_expo/' },
+  // Example: If you have other absolute paths to fix, add them here:
+  // { from: /"\/static\//g, to: '"/app/static/' },
+];
+
+function fixFile(filePath) {
+  let content = fs.readFileSync(filePath, "utf8");
+
+  // Apply each search/replace
+  for (const { from, to } of REPLACEMENTS) {
+    content = content.replace(from, to);
   }
 
-  let content = fs.readFileSync(indexPath, "utf8");
+  fs.writeFileSync(filePath, content, "utf8");
+  console.log(`Fixed paths in: ${filePath}`);
+}
 
-  // Fix paths more comprehensively
-  content = content.replace(/src="\/_expo\//g, 'src="/app/_expo/');
-  content = content.replace(/href="\/_expo\//g, 'href="/app/_expo/');
-  content = content.replace(/src="\//g, 'src="/app/');
-  content = content.replace(/href="\//g, 'href="/app/');
-  content = content.replace(/href="\/app\/app\//g, 'href="/app/'); // Fix double app paths
+function walkDirectory(dir) {
+  const items = fs.readdirSync(dir);
+  for (const item of items) {
+    const fullPath = path.join(dir, item);
+    const stat = fs.statSync(fullPath);
 
-  // Fix manifest.json reference
-  content = content.replace(/"\/manifest.json"/g, '"/app/manifest.json"');
-
-  // Fix static asset paths with a more specific regex
-  content = content.replace(/"(\/_expo\/[^"]+)"/g, '"/app$1"');
-
-  // Fix CSS links explicitly
-  content = content.replace(
-    /href="\/_expo\/static\/css\//g,
-    'href="/app/_expo/static/css/'
-  );
-
-  fs.writeFileSync(indexPath, content);
-  console.log("✅ Fixed paths in index.html");
-
-  // Fix manifest.json if it exists
-  const manifestPath = path.join(buildDir, "manifest.json");
-  if (fs.existsSync(manifestPath)) {
-    let manifest = fs.readFileSync(manifestPath, "utf8");
-    manifest = manifest.replace(/"start_url": "\//g, '"start_url": "/app/');
-    fs.writeFileSync(manifestPath, manifest);
-    console.log("✅ Fixed paths in manifest.json");
-  }
-
-  // Also fix all CSS files to have correct asset paths
-  const cssDir = path.join(buildDir, "_expo/static/css");
-  if (fs.existsSync(cssDir)) {
-    const cssFiles = fs
-      .readdirSync(cssDir)
-      .filter((file) => file.endsWith(".css"));
-    cssFiles.forEach((cssFile) => {
-      const cssPath = path.join(cssDir, cssFile);
-      let cssContent = fs.readFileSync(cssPath, "utf8");
-
-      // Fix url() references in CSS
-      cssContent = cssContent.replace(/url\(\/_expo\//g, "url(/app/_expo/");
-      cssContent = cssContent.replace(/url\("\/_expo\//g, 'url("/app/_expo/');
-      cssContent = cssContent.replace(/url\('\/_expo\//g, "url('/app/_expo/");
-      cssContent = cssContent.replace(/url\(\//g, "url(/app/");
-
-      fs.writeFileSync(cssPath, cssContent);
-      console.log(`✅ Fixed paths in CSS file: ${cssFile}`);
-    });
+    if (stat.isDirectory()) {
+      // Recursively process subdirectories
+      walkDirectory(fullPath);
+    } else if (fullPath.endsWith(".html")) {
+      // Fix paths in all .html files
+      fixFile(fullPath);
+    }
   }
 }
 
-fixHtmlPaths();
+// Start processing from the DIST_DIR
+console.log(`Fixing paths in directory: ${DIST_DIR}`);
+walkDirectory(DIST_DIR);
+console.log("Path fix complete!");
