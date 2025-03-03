@@ -1,7 +1,8 @@
 const config = {
   expo: {
-    name: "app-costa-atlantica",
-    slug: "app-costa-atlantica",
+    name: "expo-costa-atlantica",
+    slug: "expo-costa-atlantica",
+    owner: "laureanoleguizamon-org",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
@@ -43,6 +44,9 @@ const config = {
       theme: "./nativewind.config.js",
       router: {
         origin: "/app",
+      },
+      eas: {
+        projectId: "e8c51359-2fc4-40bc-a968-558d43e00323",
       },
     },
   },

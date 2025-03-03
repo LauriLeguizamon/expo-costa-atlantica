@@ -36,7 +36,7 @@ const useRequest = (endpoint?: string, method = "GET", body = null) => {
       return response.data.access;
     } catch (err) {
       await AsyncStorage.clear();
-      router.replace("/app/login");
+      router.replace("/login");
     }
   };
 
@@ -67,7 +67,7 @@ const useRequest = (endpoint?: string, method = "GET", body = null) => {
         if (!(await AsyncStorage.getItem("refreshToken"))) {
           await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
           errorToast("Debes volver a iniciar sesión");
-          router.replace("/app/login");
+          router.replace("/login");
           return;
         }
 

@@ -40,7 +40,10 @@
       "typedRoutes": true
     },
     "extra": {
-      "theme": "./nativewind.config.js"
+      "theme": "./nativewind.config.js",
+      "eas": {
+        "projectId": "e8c51359-2fc4-40bc-a968-558d43e00323"
+      }
     }
   }
 }
