@@ -15,11 +15,11 @@ export default function RootLayout() {
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (pathname.startsWith("/app")) {
-      router.replace(pathname.replace("/app", "") as any);
-    }
-  }, [pathname]);
+  // useEffect(() => {
+  //   if (pathname.startsWith("/app")) {
+  //     router.replace(pathname.replace("/app", "") as any);
+  //   }
+  // }, [pathname]);
 
   return (
     <GluestackUIProvider>
