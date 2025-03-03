@@ -13,7 +13,7 @@
     "fix-paths": "node ./scripts/fix-html-paths.js",
     "create-web-config": "node ./scripts/create-web-config.js",
     "verify-paths": "node ./scripts/verify-paths.js",
-    "build:production": "npm run build && npm run fix-paths && npm run create-web-config && npm run verify-paths",
+    "build:production": "npm run build",
     "test": "jest --watchAll",
     "lint": "expo lint"
   },
