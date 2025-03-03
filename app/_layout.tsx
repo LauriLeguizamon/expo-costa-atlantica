@@ -1,5 +1,5 @@
 import "@/global.css";
-import { Stack, useRouter } from "expo-router";
+import { Stack, usePathname, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 import "react-native-reanimated";
@@ -13,10 +13,13 @@ registerTranslation("es", es);
 
 export default function RootLayout() {
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // router.replace("/login");
-  });
+    if (pathname.startsWith("/app")) {
+      router.replace(pathname.replace("/app", "") as any);
+    }
+  }, [pathname]);
 
   return (
     <GluestackUIProvider>
