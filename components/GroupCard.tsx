@@ -49,8 +49,10 @@ function GroupCard({ group }: any) {
       )}
 
       <Text className="mt-1 text-typography-400 text-xs">Observaciones</Text>
-      {group.observation && <Text>{group.observation}</Text>}
-      {!group.observation && <Text>Sin observaciones</Text>}
+      {group.entryGroupObservation && (
+        <Text>{group.entryGroupObservation}</Text>
+      )}
+      {!group.entryGroupObservation && <Text>Sin observaciones</Text>}
     </Pressable>
   );
 }

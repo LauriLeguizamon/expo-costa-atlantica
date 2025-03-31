@@ -22,7 +22,6 @@ const config = {
       bundler: "metro",
       output: "static",
       favicon: "./assets/images/favicon.png",
-      publicPath: "/app/",
     },
     plugins: [
       "expo-router",
@@ -42,9 +41,6 @@ const config = {
     },
     extra: {
       theme: "./nativewind.config.js",
-      router: {
-        origin: "/app",
-      },
       eas: {
         projectId: "e8c51359-2fc4-40bc-a968-558d43e00323",
       },

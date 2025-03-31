@@ -36,8 +36,9 @@ const useAuth = () => {
         setLoading((prev) => ({ ...prev, post: false }));
       },
       (error: any) => {
-        error.status === 400 && error.data?.messageError
-          ? warningToast(error.data?.messageError)
+        console.log(error);
+        error.status === 400 && error.response.data.messageError
+          ? warningToast(error.response.data.messageError)
           : errorToast("Error iniciando sesión, contáctate con el soporte");
 
         setLoading((prev) => ({ ...prev, post: false }));

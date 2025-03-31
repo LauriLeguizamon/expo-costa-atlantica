@@ -95,7 +95,7 @@ const useRequest = (endpoint?: string, method = "GET", body = null) => {
       return response?.data;
     } catch (error: any) {
       // await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
-      // errorHandler(error);
+      errorHandler(error);
     } finally {
       setLoading(false);
     }

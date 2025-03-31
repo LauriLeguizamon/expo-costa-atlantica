@@ -76,6 +76,27 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
         guideObservation: passengerToEdit.guideObservation,
         paymentAmount: passengerToEdit.paymentAmount,
       });
+
+      // Calculate total amount directly for the edited passenger
+      if (passengerToEdit.scheduledExcursion) {
+        const adultsValue = parseInt(passengerToEdit.adultsCount) || 0;
+        const minorsValue = parseInt(passengerToEdit.minorsCount) || 0;
+        const halfPriceValue =
+          parseInt(passengerToEdit.halfPriceAdultsCount) || 0;
+
+        const adultsPrice =
+          passengerToEdit.scheduledExcursion.excursionType.priceAdult;
+        const minorsPrice =
+          passengerToEdit.scheduledExcursion.excursionType.priceMinor;
+
+        setTotalAmount(
+          adultsValue * adultsPrice +
+            minorsValue * minorsPrice +
+            halfPriceValue * adultsPrice * 0.5
+        );
+      } else {
+        setTotalAmount(0);
+      }
     } else {
       setInitialValues({
         hotel: "",
@@ -90,13 +111,14 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
         guideObservation: "",
         paymentAmount: undefined,
       });
+      setTotalAmount(0);
     }
   }, [visible, passengerToEdit]);
 
   // Function to update the total amount based on current formik values
   const updateTotalAmount = () => {
     if (!formikRef.current || !formikRef.current.values.scheduledExcursion)
-      return 0;
+      return;
 
     const values = formikRef.current.values;
 
@@ -104,7 +126,6 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
     const minorsValue = parseInt(values.minorsCount) || 0;
     const halfPriceValue = parseInt(values.halfPriceAdultsCount) || 0;
 
-    console.log(values.scheduledExcursion);
     const adultsPrice = values.scheduledExcursion.excursionType.priceAdult;
     const minorsPrice = values.scheduledExcursion.excursionType.priceMinor;
 
@@ -162,6 +183,11 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
     return (
       <View className="h-auto flex py-2 px-4 border-b border-gray-100">
         <Text className="text-black">{item.name}</Text>
+        {item.isScheduleForGroup && (
+          <Text className="text-typography-400 text-sm">
+            Diagramada para este grupo
+          </Text>
+        )}
       </View>
     );
   };
@@ -376,6 +402,21 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
                           className="h-12" // Added height class
                         />
                       </Input>
+                    </VStack>
+
+                    <VStack className="flex-1">
+                      <Text>Liberado</Text>
+                      <Input>
+                        <InputField
+                          keyboardType="numeric"
+                          placeholder="0"
+                          value={values.freeCount?.toString()}
+                          onChangeText={(text) =>
+                            handleNumericInput(text, "freeCount", setFieldValue)
+                          }
+                          className="h-12" // Added height class
+                        />
+                      </Input>
 
                       <Text>Bebés</Text>
                       <Input>
@@ -394,23 +435,8 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
                           className="h-12" // Added height class
                         />
                       </Input>
-                    </VStack>
 
-                    <VStack className="flex-1">
-                      <Text>Liberado</Text>
-                      <Input>
-                        <InputField
-                          keyboardType="numeric"
-                          placeholder="0"
-                          value={values.freeCount?.toString()}
-                          onChangeText={(text) =>
-                            handleNumericInput(text, "freeCount", setFieldValue)
-                          }
-                          className="h-12" // Added height class
-                        />
-                      </Input>
-
-                      <Text>Medio Liberado</Text>
+                      {/* <Text>Medio Liberado</Text>
                       <Input>
                         <InputField
                           keyboardType="numeric"
@@ -426,7 +452,7 @@ const PassengerForm = ({ visible, onClose, group, passengerToEdit }: any) => {
                           }
                           className="h-12" // Added height class
                         />
-                      </Input>
+                      </Input> */}
                     </VStack>
                   </HStack>
 
