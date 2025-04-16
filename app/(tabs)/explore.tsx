@@ -50,7 +50,7 @@ export default function TabTwoScreen() {
   // Generate PDF URL based on the selected date and seller ID
   const getPdfUrl = () => {
     return sellerId
-      ? `https://caturismo.online/api-dev/passengers/seller-commission-pdf/${sellerId}/${date}/`
+      ? `https://caturismo.online/api/passengers/seller-commission-pdf/${sellerId}/${date}/`
       : "";
   };
 
