@@ -49,6 +49,23 @@ const usePassengers = () => {
     );
   };
 
+  const editPassenger = async (passengerId: string, passengerData: any) => {
+    setLoading((prev) => ({ ...prev, put: true }));
+    return await request(
+      "patch", // Use PATCH method
+      `passengers/${passengerId}/`, // Dynamic endpoint
+      async (data: any) => {
+        setLoading((prev) => ({ ...prev, put: false }));
+        successToast("Pasajero actualizado correctamente");
+      },
+      (error: any) => {
+        errorToast(error);
+        setLoading((prev) => ({ ...prev, put: false }));
+      },
+      passengerData // Pass the updated data
+    );
+  };
+
   const groupPassengersByHotelAndExcursion = (data: any) => {
     const grouped: any = [];
 
@@ -82,6 +99,7 @@ const usePassengers = () => {
   return {
     // passengers
     createPassengers,
+    editPassenger, // Export the new function
     groupPassengersByHotelAndExcursion,
 
     loading,

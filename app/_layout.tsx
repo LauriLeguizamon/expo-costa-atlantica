@@ -83,6 +83,12 @@ export default function RootLayout() {
           />
           <Stack.Screen name="group" options={{ headerShown: false }} />
           <Stack.Screen
+            name="excursion"
+            options={{
+              headerShown: false, // Add this line
+            }}
+          />
+          <Stack.Screen
             name="+not-found"
             options={{
               title: "Página no encontrada",

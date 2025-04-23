@@ -1,12 +1,46 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Tabs } from "expo-router";
-import React from "react";
-import { Platform } from "react-native";
+import React, { useState, useEffect } from "react";
+import { Platform, View } from "react-native";
+import { IoHome, IoPaperPlane, IoWalk } from "react-icons/io5";
 
-import { IconSymbol } from "@/components/ui/IconSymbol";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 
+type User = {
+  userType: string;
+} | null;
+
 export default function TabLayout() {
+  const [user, setUser] = useState<User>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userString = await AsyncStorage.getItem("user");
+        if (userString) {
+          setUser(JSON.parse(userString));
+        }
+      } catch (error) {
+        console.error("Failed to fetch user from AsyncStorage", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  if (isLoading) {
+    return <View />;
+  }
+
+  if (!user) {
+    console.warn("User data not found in AsyncStorage.");
+    return <View />;
+  }
+
   return (
     <Tabs
       screenOptions={{
@@ -23,19 +57,24 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          href: user.userType === "SELLER" ? undefined : null,
           title: "Home",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <IoHome size={28} color={color} />,
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
           title: "Explore",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
-          ),
+          tabBarIcon: ({ color }) => <IoPaperPlane size={28} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="excursions"
+        options={{
+          href: user.userType === "SELLER" ? null : undefined,
+          title: "Excursiones",
+          tabBarIcon: ({ color }) => <IoWalk size={28} color={color} />,
         }}
       />
     </Tabs>
