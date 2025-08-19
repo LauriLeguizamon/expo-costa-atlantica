@@ -1,6 +1,6 @@
 import useGroups from "@/hooks/useGroups";
 import { useCallback, useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 import dayjs from "dayjs";
 import GroupCard from "@/components/GroupCard";
@@ -25,7 +25,7 @@ export default function HomeScreen(props: any) {
   };
 
   return (
-    <View>
+    <ScrollView>
       <Button
         className="m-2"
         onPress={() =>
@@ -43,6 +43,6 @@ export default function HomeScreen(props: any) {
       {groups?.map((group: any) => (
         <GroupCard key={group.id} group={group}></GroupCard>
       ))}
-    </View>
+    </ScrollView>
   );
 }
