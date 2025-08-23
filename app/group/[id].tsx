@@ -93,8 +93,10 @@ function GroupDetail() {
           visible={modalVisible}
           group={group}
           passengerToEdit={passengerToEdit}
-          onClose={() => {
-            getGroupFromDB(id as string);
+          onClose={(refreshNeeded?: boolean) => {
+            if (refreshNeeded) {
+              getGroupFromDB(id as string);
+            }
             setPassengerToEdit(null);
             setModalVisible(false);
           }}

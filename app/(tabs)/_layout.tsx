@@ -65,6 +65,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
+          href: user.userType === "GUIDE" ? null : undefined,
           title: "Explore",
           tabBarIcon: ({ color }) => <IoPaperPlane size={28} color={color} />,
         }}

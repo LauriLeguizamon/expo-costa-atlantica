@@ -32,7 +32,15 @@ const useAuth = () => {
         await AsyncStorage.setItem("refreshToken", refreshToken);
         await AsyncStorage.setItem("user", JSON.stringify(data.user));
 
-        router.replace("/");
+        // Redirigir según el tipo de usuario
+        if (data.user.userType === "GUIDE") {
+          router.replace("/(tabs)/excursions");
+        } else if (data.user.userType === "SELLER") {
+          router.replace("/(tabs)");
+        } else {
+          router.replace("/");
+        }
+        
         setLoading((prev) => ({ ...prev, post: false }));
       },
       (error: any) => {
