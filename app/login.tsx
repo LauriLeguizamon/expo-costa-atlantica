@@ -63,7 +63,7 @@ function LoginScreen() {
           <Input className="my-1" size="lg">
             <InputField
               type="password"
-              placeholder="contraseña"
+              placeholder="Contraseña"
               value={inputValue}
               onChangeText={(text) => setInputValue(text)}
             />

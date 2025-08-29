@@ -11,6 +11,7 @@ export default function TabTwoScreen() {
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [showPdf, setShowPdf] = useState(true);
   const [sellerId, setSellerId] = useState<number | null>(null);
+  const [userType, setUserType] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,6 +25,7 @@ export default function TabTwoScreen() {
           const user = JSON.parse(userData);
           if (user && user.id) {
             setSellerId(user.id);
+            setUserType(user.userType);
           } else {
             setError("No se encontró ID de usuario");
           }
@@ -98,7 +100,7 @@ export default function TabTwoScreen() {
         {showPdf && (
           <View className="mt-5 bg-white rounded-lg p-4 shadow-sm sm:mx-auto sm:max-w-[50%] mb-20">
             <Text className="text-lg font-bold mb-4 text-center">
-              Reporte de comisiones
+              {userType === "GUIDE" ? "Rendición excursión" : "Reporte de comisiones"}
             </Text>
             <PdfViewer url={getPdfUrl()} />
           </View>

@@ -45,6 +45,7 @@ const PassengerForm = ({
     undefined
   ); // State for new payment
   const [isFullyPaid, setIsFullyPaid] = useState(false); // State for full payment status
+  const [userType, setUserType] = useState<string | null>(null); // State for user type
 
   const [excursions, setExcursions] = useState([]);
   const [initialValues, setInitialValues] = useState({
@@ -68,6 +69,21 @@ const PassengerForm = ({
 
   useEffect(() => {
     hotelHook.getHotels();
+  }, []);
+
+  useEffect(() => {
+    const getUserType = async () => {
+      try {
+        const userData = await AsyncStorage.getItem("user");
+        if (userData) {
+          const user = JSON.parse(userData);
+          setUserType(user.userType);
+        }
+      } catch (error) {
+        console.error("Error getting user type:", error);
+      }
+    };
+    getUserType();
   }, []);
 
   useEffect(() => {
@@ -105,21 +121,36 @@ const PassengerForm = ({
 
       // Calculate total amount directly for the edited passenger
       let currentTotalAmount = 0;
-      if (passengerToEdit.scheduledExcursion) {
+      let adultsPrice = 0;
+      let minorsPrice = 0;
+
+      // Para usuarios GUIDE, usar los precios de la excursión del grupo
+      if (userType === "GUIDE" && group && group.scheduledExcursion && group.scheduledExcursion.excursionType) {
+        adultsPrice = group.scheduledExcursion.excursionType.priceAdult;
+        minorsPrice = group.scheduledExcursion.excursionType.priceMinor;
+      } else if (passengerToEdit.scheduledExcursion) {
+        adultsPrice = passengerToEdit.scheduledExcursion.excursionType.priceAdult;
+        minorsPrice = passengerToEdit.scheduledExcursion.excursionType.priceMinor;
+      }
+
+      if (adultsPrice > 0 || minorsPrice > 0) {
         const adultsValue = parseInt(passengerToEdit.adultsCount) || 0;
         const minorsValue = parseInt(passengerToEdit.minorsCount) || 0;
-        const halfPriceValue =
-          parseInt(passengerToEdit.halfPriceAdultsCount) || 0;
+        const halfPriceValue = parseInt(passengerToEdit.halfPriceAdultsCount) || 0;
+        
+        // Restar las bajas (absent counts)
+        const adultsAbsentValue = parseInt(passengerToEdit.adultsAbsentCount) || 0;
+        const minorsAbsentValue = parseInt(passengerToEdit.minorsAbsentCount) || 0;
+        const halfPriceAbsentValue = parseInt(passengerToEdit.halfPriceAbsentAdultsCount) || 0;
 
-        const adultsPrice =
-          passengerToEdit.scheduledExcursion.excursionType.priceAdult;
-        const minorsPrice =
-          passengerToEdit.scheduledExcursion.excursionType.priceMinor;
+        const effectiveAdults = Math.max(0, adultsValue - adultsAbsentValue);
+        const effectiveMinors = Math.max(0, minorsValue - minorsAbsentValue);
+        const effectiveHalfPrice = Math.max(0, halfPriceValue - halfPriceAbsentValue);
 
         currentTotalAmount =
-          adultsValue * adultsPrice +
-          minorsValue * minorsPrice +
-          halfPriceValue * adultsPrice * 0.5;
+          effectiveAdults * adultsPrice +
+          effectiveMinors * minorsPrice +
+          effectiveHalfPrice * adultsPrice * 0.5;
 
         setTotalAmount(currentTotalAmount);
       } else {
@@ -167,22 +198,41 @@ const PassengerForm = ({
 
   // Function to update the total amount based on current formik values
   const updateTotalAmount = () => {
-    if (!formikRef.current || !formikRef.current.values.scheduledExcursion)
-      return;
+    if (!formikRef.current) return;
 
     const values = formikRef.current.values;
+    let adultsPrice = 0;
+    let minorsPrice = 0;
+
+    // Para usuarios GUIDE, usar los precios de la excursión del grupo
+    if (userType === "GUIDE" && group && group.scheduledExcursion && group.scheduledExcursion.excursionType) {
+      adultsPrice = group.scheduledExcursion.excursionType.priceAdult;
+      minorsPrice = group.scheduledExcursion.excursionType.priceMinor;
+    } else if (values.scheduledExcursion && values.scheduledExcursion.excursionType) {
+      // Para otros usuarios, usar la excursión seleccionada
+      adultsPrice = values.scheduledExcursion.excursionType.priceAdult;
+      minorsPrice = values.scheduledExcursion.excursionType.priceMinor;
+    } else {
+      return; // No hay precios disponibles
+    }
 
     const adultsValue = parseInt(values.adultsCount) || 0;
     const minorsValue = parseInt(values.minorsCount) || 0;
     const halfPriceValue = parseInt(values.halfPriceAdultsCount) || 0;
+    
+    // Restar las bajas (absent counts)
+    const adultsAbsentValue = parseInt(values.adultsAbsentCount) || 0;
+    const minorsAbsentValue = parseInt(values.minorsAbsentCount) || 0;
+    const halfPriceAbsentValue = parseInt(values.halfPriceAbsentAdultsCount) || 0;
 
-    const adultsPrice = values.scheduledExcursion.excursionType.priceAdult;
-    const minorsPrice = values.scheduledExcursion.excursionType.priceMinor;
+    const effectiveAdults = Math.max(0, adultsValue - adultsAbsentValue);
+    const effectiveMinors = Math.max(0, minorsValue - minorsAbsentValue);
+    const effectiveHalfPrice = Math.max(0, halfPriceValue - halfPriceAbsentValue);
 
     setTotalAmount(
-      adultsValue * adultsPrice +
-        minorsValue * minorsPrice +
-        halfPriceValue * adultsPrice * 0.5
+      effectiveAdults * adultsPrice +
+        effectiveMinors * minorsPrice +
+        effectiveHalfPrice * adultsPrice * 0.5
     );
   };
 
@@ -277,8 +327,9 @@ const PassengerForm = ({
     // Call the editPassenger function from the hook
     await passengerHook.editPassenger(passengerToEdit.id, absentData);
     // Success/error toasts are handled within the hook
-    // Optionally close the modal or refresh data after successful update
-    // onClose(true); // Example: close modal and indicate refresh needed
+    
+    // Close modal and indicate refresh needed
+    onClose(true);
   };
 
   // Function to save guide observation using the API
@@ -306,7 +357,9 @@ const PassengerForm = ({
   const validationSchema = Yup.object({
     name: Yup.string().required("El nombre es obligatorio"),
     paymentAmount: Yup.string().required("La seña es obligatoria"),
-    scheduledExcursion: Yup.object().required("La excursión es obligatoria"),
+    scheduledExcursion: userType === "GUIDE" 
+      ? Yup.object().nullable() 
+      : Yup.object().required("La excursión es obligatoria"),
     hotel: Yup.object().required("El hotel es obligatorio"),
   });
 
@@ -343,6 +396,41 @@ const PassengerForm = ({
 
     if (!user) return;
 
+    // Calcular el totalAmount correcto antes de enviar
+    let calculatedTotalAmount = 0;
+    let adultsPrice = 0;
+    let minorsPrice = 0;
+
+    // Para usuarios GUIDE, usar los precios de la excursión del grupo
+    if (userType === "GUIDE" && group && group.scheduledExcursion && group.scheduledExcursion.excursionType) {
+      adultsPrice = group.scheduledExcursion.excursionType.priceAdult;
+      minorsPrice = group.scheduledExcursion.excursionType.priceMinor;
+    } else if (values.scheduledExcursion && values.scheduledExcursion.excursionType) {
+      // Para otros usuarios, usar la excursión seleccionada
+      adultsPrice = values.scheduledExcursion.excursionType.priceAdult;
+      minorsPrice = values.scheduledExcursion.excursionType.priceMinor;
+    }
+
+    if (adultsPrice > 0 || minorsPrice > 0) {
+      const adultsValue = parseInt(values.adultsCount || 0);
+      const minorsValue = parseInt(values.minorsCount || 0);
+      const halfPriceValue = parseInt(values.halfPriceAdultsCount || 0);
+      
+      // Restar las bajas (absent counts)
+      const adultsAbsentValue = parseInt(values.adultsAbsentCount || 0);
+      const minorsAbsentValue = parseInt(values.minorsAbsentCount || 0);
+      const halfPriceAbsentValue = parseInt(values.halfPriceAbsentAdultsCount || 0);
+
+      const effectiveAdults = Math.max(0, adultsValue - adultsAbsentValue);
+      const effectiveMinors = Math.max(0, minorsValue - minorsAbsentValue);
+      const effectiveHalfPrice = Math.max(0, halfPriceValue - halfPriceAbsentValue);
+
+      calculatedTotalAmount =
+        effectiveAdults * adultsPrice +
+        effectiveMinors * minorsPrice +
+        effectiveHalfPrice * adultsPrice * 0.5;
+    }
+
     const passengerData = {
       id: passengerToEdit ? passengerToEdit.id : uuid(),
       group: group.id,
@@ -364,14 +452,14 @@ const PassengerForm = ({
       minorsAbsentCount: parseInt(values.minorsAbsentCount || 0),
       babyAbsentCount: parseInt(values.babyAbsentCount || 0),
       freeAbsentCount: parseInt(values.freeAbsentCount || 0),
-      totalAmount: totalAmount,
+      totalAmount: calculatedTotalAmount,
     };
 
     passengerToEdit
       ? await updatePassenger(passengerData)
       : await createPassenger(passengerData);
 
-    onClose();
+    onClose(true); // Indicate refresh needed
   };
 
   const createPassenger = async (passengerData: any) => {
@@ -481,28 +569,32 @@ const PassengerForm = ({
                     </Text>
                   )}
 
-                  <Text>Excursión</Text>
-                  <Dropdown
-                    data={excursions}
-                    search
-                    style={styles.dropdown}
-                    maxHeight={300}
-                    labelField="name"
-                    valueField="id"
-                    placeholder="Seleccionar Excursion"
-                    searchPlaceholder="Buscar Excursion..."
-                    value={values.scheduledExcursion}
-                    onChange={(item) =>
-                      setFieldValue("scheduledExcursion", item)
-                    }
-                    renderItem={renderScheduledExcursion}
-                    disable={isReadOnly} // Disable dropdown if read-only
-                  />
-                  {touched.scheduledExcursion && errors.scheduledExcursion && (
-                    <Text className="text-red-500">
-                      {typeof errors.scheduledExcursion === "string" &&
-                        errors.scheduledExcursion}
-                    </Text>
+                  {userType !== "GUIDE" && (
+                    <>
+                      <Text>Excursión</Text>
+                      <Dropdown
+                        data={excursions}
+                        search
+                        style={styles.dropdown}
+                        maxHeight={300}
+                        labelField="name"
+                        valueField="id"
+                        placeholder="Seleccionar Excursion"
+                        searchPlaceholder="Buscar Excursion..."
+                        value={values.scheduledExcursion}
+                        onChange={(item) =>
+                          setFieldValue("scheduledExcursion", item)
+                        }
+                        renderItem={renderScheduledExcursion}
+                        disable={isReadOnly} // Disable dropdown if read-only
+                      />
+                      {touched.scheduledExcursion && errors.scheduledExcursion && (
+                        <Text className="text-red-500">
+                          {typeof errors.scheduledExcursion === "string" &&
+                            errors.scheduledExcursion}
+                        </Text>
+                      )}
+                    </>
                   )}
 
                   <Text>Nombre</Text>
@@ -598,99 +690,103 @@ const PassengerForm = ({
                     </VStack>
                   </HStack>
 
-                  {/* Absent Counts Section */}
-                  <Text className="font-semibold mt-4 pt-4 border-t border-gray-200">
-                    Ausentes
-                  </Text>
-                  <HStack className="space-x-4 gap-3">
-                    <VStack className="flex-1">
-                      <Text>Adultos Ausentes</Text>
-                      <Input>
-                        <InputField
-                          keyboardType="numeric"
-                          placeholder="0"
-                          value={values.adultsAbsentCount?.toString()}
-                          onChangeText={(text) =>
-                            handleNumericInput(
-                              text,
-                              "adultsAbsentCount",
-                              setFieldValue
-                            )
-                          }
-                          className="h-12" // Always editable
-                        />
-                      </Input>
+                  {/* Absent Counts Section - Hidden for SELLER */}
+                  {userType !== "SELLER" && (
+                    <>
+                      <Text className="font-semibold mt-4 pt-4 border-t border-gray-200">
+                        Ausentes
+                      </Text>
+                      <HStack className="space-x-4 gap-3">
+                        <VStack className="flex-1">
+                          <Text>Adultos Ausentes</Text>
+                          <Input>
+                            <InputField
+                              keyboardType="numeric"
+                              placeholder="0"
+                              value={values.adultsAbsentCount?.toString()}
+                              onChangeText={(text) =>
+                                handleNumericInput(
+                                  text,
+                                  "adultsAbsentCount",
+                                  setFieldValue
+                                )
+                              }
+                              className="h-12" // Always editable
+                            />
+                          </Input>
 
-                      <Text>Menores Ausentes</Text>
-                      <Input>
-                        <InputField
-                          keyboardType="numeric"
-                          placeholder="0"
-                          value={values.minorsAbsentCount?.toString()}
-                          onChangeText={(text) =>
-                            handleNumericInput(
-                              text,
-                              "minorsAbsentCount",
-                              setFieldValue
-                            )
-                          }
-                          className="h-12" // Always editable
-                        />
-                      </Input>
-                    </VStack>
+                          <Text>Menores Ausentes</Text>
+                          <Input>
+                            <InputField
+                              keyboardType="numeric"
+                              placeholder="0"
+                              value={values.minorsAbsentCount?.toString()}
+                              onChangeText={(text) =>
+                                handleNumericInput(
+                                  text,
+                                  "minorsAbsentCount",
+                                  setFieldValue
+                                )
+                              }
+                              className="h-12" // Always editable
+                            />
+                          </Input>
+                        </VStack>
 
-                    <VStack className="flex-1">
-                      <Text>Liberados Ausentes</Text>
-                      <Input>
-                        <InputField
-                          keyboardType="numeric"
-                          placeholder="0"
-                          value={values.freeAbsentCount?.toString()}
-                          onChangeText={(text) =>
-                            handleNumericInput(
-                              text,
-                              "freeAbsentCount",
-                              setFieldValue
-                            )
-                          }
-                          className="h-12" // Always editable
-                        />
-                      </Input>
+                        <VStack className="flex-1">
+                          <Text>Liberados Ausentes</Text>
+                          <Input>
+                            <InputField
+                              keyboardType="numeric"
+                              placeholder="0"
+                              value={values.freeAbsentCount?.toString()}
+                              onChangeText={(text) =>
+                                handleNumericInput(
+                                  text,
+                                  "freeAbsentCount",
+                                  setFieldValue
+                                )
+                              }
+                              className="h-12" // Always editable
+                            />
+                          </Input>
 
-                      <Text>Bebés Ausentes</Text>
-                      <Input>
-                        <InputField
-                          keyboardType="numeric"
-                          placeholder="0"
-                          value={values.babyAbsentCount?.toString()}
-                          onChangeText={(text) =>
-                            handleNumericInput(
-                              text,
-                              "babyAbsentCount",
-                              setFieldValue
-                            )
-                          }
-                          className="h-12" // Always editable
-                        />
-                      </Input>
-                    </VStack>
-                  </HStack>
+                          <Text>Bebés Ausentes</Text>
+                          <Input>
+                            <InputField
+                              keyboardType="numeric"
+                              placeholder="0"
+                              value={values.babyAbsentCount?.toString()}
+                              onChangeText={(text) =>
+                                handleNumericInput(
+                                  text,
+                                  "babyAbsentCount",
+                                  setFieldValue
+                                )
+                              }
+                              className="h-12" // Always editable
+                            />
+                          </Input>
+                        </VStack>
+                      </HStack>
 
-                  {/* Save Absents Button - Only in ReadOnly mode */}
-                  {isReadOnly && (
-                    <Button
-                      onPress={handleSaveAbsents}
-                      className={`mt-2 bg-orange-500 ${
-                        passengerHook.loading.put ? "opacity-50" : "" // Add loading state feedback
-                      }`}
-                      disabled={passengerHook.loading.put} // Disable button while loading
-                    >
-                      {passengerHook.loading.put ? ( // Show spinner when loading
-                        <Spinner size="small" color="white" />
-                      ) : (
-                        <ButtonText>Guardar Ausentes</ButtonText>
+                      {/* Save Absents Button - Only in ReadOnly mode */}
+                      {isReadOnly && (
+                        <Button
+                          onPress={handleSaveAbsents}
+                          className={`mt-2 bg-orange-500 ${
+                            passengerHook.loading.put ? "opacity-50" : "" // Add loading state feedback
+                          }`}
+                          disabled={passengerHook.loading.put} // Disable button while loading
+                        >
+                          {passengerHook.loading.put ? ( // Show spinner when loading
+                            <Spinner size="small" color="white" />
+                          ) : (
+                            <ButtonText>Guardar Ausentes</ButtonText>
+                          )}
+                        </Button>
                       )}
-                    </Button>
+                    </>
                   )}
 
                   <Text>Importe Total</Text>
@@ -755,8 +851,13 @@ const PassengerForm = ({
                     <VStack className="mt-4 space-y-2 border-t border-gray-200 pt-4">
                       {!isFullyPaid ? (
                         <>
+                          <View className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                            <Text className="text-yellow-800 text-sm font-medium">
+                              ⚠️ Los pagos con tarjeta deben ser avisados a la oficina, no cargar desde la app.
+                            </Text>
+                          </View>
                           <Text className="font-semibold">
-                            Registrar Nuevo Pago
+                            Registrar Nuevo Pago en efectivo
                           </Text>
                           <Input>
                             <InputField

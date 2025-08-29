@@ -192,6 +192,7 @@ function ExcursionDetail() {
               updateList();
             }
             setPassengerToEdit(null);
+            setModalVisible(false);
           }}
         />
       </ScrollView>
